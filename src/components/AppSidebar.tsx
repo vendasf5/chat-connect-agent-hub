@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -11,7 +10,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import { Users, MessageSquare, Settings, BarChart3, UserCheck } from 'lucide-react';
 
@@ -24,7 +22,6 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -33,7 +30,7 @@ export function AppSidebar() {
     isActive ? 'bg-primary text-primary-foreground font-medium' : 'hover:bg-accent';
 
   return (
-    <Sidebar className={collapsed ? 'w-14' : 'w-64'} collapsible>
+    <Sidebar collapsible="icon">
       <SidebarTrigger className="m-2 self-end" />
       
       <SidebarContent>
@@ -49,7 +46,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavCls}>
                       <item.icon className="mr-3 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
