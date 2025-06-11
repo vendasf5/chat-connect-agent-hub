@@ -8,15 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ApiConfig } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ThemeColorPicker from '@/components/ThemeColorPicker';
 
 const Settings = () => {
   const { toast } = useToast();
-  const [apiConfig, setApiConfig] = useState<ApiConfig>({
-    evolutionApiUrl: 'https://api.evolution.com',
-    evolutionApiKey: '',
-    n8nWebhookUrl: 'https://hooks.n8n.io/webhook'
-  });
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [notifications, setNotifications] = useState({
     newConversations: true,
@@ -25,19 +25,47 @@ const Settings = () => {
     systemAlerts: true
   });
 
-  const [transferSettings, setTransferSettings] = useState({
-    autoTransferTimeout: '300',
-    maxQueueSize: '10',
-    transferMessage: 'Você será transferido para um atendente humano. Por favor, aguarde...'
+  // Buscar configurações de API
+  const { data: apiConfig, isLoading: isLoadingApiConfig } = useQuery({
+    queryKey: ['api-config', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      return data;
+    },
+    enabled: !!user,
   });
 
-  const handleSaveApiConfig = () => {
-    // Aqui você salvaria as configurações no seu backend
-    console.log('Salvando configurações de API:', apiConfig);
-    toast({
-      title: 'Configurações salvas',
-      description: 'As configurações da API foram atualizadas com sucesso.',
-    });
+  // Mutation para salvar configurações de API
+  const saveApiConfigMutation = useMutation({
+    mutationFn: async (config: any) => {
+      const { error } = await supabase
+        .from('api_configurations')
+        .upsert({
+          user_id: user?.id,
+          ...config,
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api-config'] });
+      toast({
+        title: 'Configurações salvas',
+        description: 'As configurações da API foram atualizadas com sucesso.',
+      });
+    },
+  });
+
+  const handleSaveApiConfig = (configData: any) => {
+    saveApiConfigMutation.mutate(configData);
   };
 
   const handleSaveNotifications = () => {
@@ -48,27 +76,32 @@ const Settings = () => {
     });
   };
 
-  const handleSaveTransferSettings = () => {
-    console.log('Salvando configurações de transferência:', transferSettings);
-    toast({
-      title: 'Configurações de transferência salvas',
-      description: 'As configurações foram atualizadas com sucesso.',
-    });
-  };
+  if (isLoadingApiConfig) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-        <p className="text-muted-foreground">Configure as integrações e preferências do sistema</p>
+        <p className="text-muted-foreground">Configure as integrações, cores e preferências do sistema</p>
       </div>
 
-      <Tabs defaultValue="api" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="theme" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="theme">Cores & Tema</TabsTrigger>
           <TabsTrigger value="api">APIs & Integrações</TabsTrigger>
           <TabsTrigger value="notifications">Notificações</TabsTrigger>
           <TabsTrigger value="transfers">Transferências</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="theme" className="space-y-6">
+          <ThemeColorPicker />
+        </TabsContent>
 
         <TabsContent value="api" className="space-y-6">
           <Card>
@@ -83,8 +116,7 @@ const Settings = () => {
                 <Label htmlFor="evolutionUrl">URL da Evolution API</Label>
                 <Input
                   id="evolutionUrl"
-                  value={apiConfig.evolutionApiUrl}
-                  onChange={(e) => setApiConfig({...apiConfig, evolutionApiUrl: e.target.value})}
+                  defaultValue={apiConfig?.evolution_api_url || 'https://api.evolution.com'}
                   placeholder="https://api.evolution.com"
                 />
               </div>
@@ -94,13 +126,23 @@ const Settings = () => {
                 <Input
                   id="evolutionKey"
                   type="password"
-                  value={apiConfig.evolutionApiKey}
-                  onChange={(e) => setApiConfig({...apiConfig, evolutionApiKey: e.target.value})}
+                  defaultValue={apiConfig?.evolution_api_key || ''}
                   placeholder="Sua chave da Evolution API"
                 />
               </div>
               
-              <Button onClick={handleSaveApiConfig}>
+              <Button onClick={() => {
+                const evolutionUrl = (document.getElementById('evolutionUrl') as HTMLInputElement)?.value;
+                const evolutionKey = (document.getElementById('evolutionKey') as HTMLInputElement)?.value;
+                handleSaveApiConfig({
+                  evolution_api_url: evolutionUrl,
+                  evolution_api_key: evolutionKey,
+                  n8n_webhook_url: apiConfig?.n8n_webhook_url,
+                  auto_transfer_timeout: apiConfig?.auto_transfer_timeout,
+                  max_queue_size: apiConfig?.max_queue_size,
+                  transfer_message: apiConfig?.transfer_message,
+                });
+              }}>
                 Salvar Configurações da Evolution API
               </Button>
             </CardContent>
@@ -118,13 +160,22 @@ const Settings = () => {
                 <Label htmlFor="n8nUrl">URL Base dos Webhooks</Label>
                 <Input
                   id="n8nUrl"
-                  value={apiConfig.n8nWebhookUrl}
-                  onChange={(e) => setApiConfig({...apiConfig, n8nWebhookUrl: e.target.value})}
+                  defaultValue={apiConfig?.n8n_webhook_url || 'https://hooks.n8n.io/webhook'}
                   placeholder="https://hooks.n8n.io/webhook"
                 />
               </div>
               
-              <Button onClick={handleSaveApiConfig}>
+              <Button onClick={() => {
+                const n8nUrl = (document.getElementById('n8nUrl') as HTMLInputElement)?.value;
+                handleSaveApiConfig({
+                  evolution_api_url: apiConfig?.evolution_api_url,
+                  evolution_api_key: apiConfig?.evolution_api_key,
+                  n8n_webhook_url: n8nUrl,
+                  auto_transfer_timeout: apiConfig?.auto_transfer_timeout,
+                  max_queue_size: apiConfig?.max_queue_size,
+                  transfer_message: apiConfig?.transfer_message,
+                });
+              }}>
                 Salvar Configurações do N8N
               </Button>
             </CardContent>
@@ -221,11 +272,7 @@ const Settings = () => {
                 <Input
                   id="timeout"
                   type="number"
-                  value={transferSettings.autoTransferTimeout}
-                  onChange={(e) => setTransferSettings({
-                    ...transferSettings, 
-                    autoTransferTimeout: e.target.value
-                  })}
+                  defaultValue={apiConfig?.auto_transfer_timeout || 300}
                   placeholder="300"
                 />
               </div>
@@ -235,11 +282,7 @@ const Settings = () => {
                 <Input
                   id="queueSize"
                   type="number"
-                  value={transferSettings.maxQueueSize}
-                  onChange={(e) => setTransferSettings({
-                    ...transferSettings, 
-                    maxQueueSize: e.target.value
-                  })}
+                  defaultValue={apiConfig?.max_queue_size || 10}
                   placeholder="10"
                 />
               </div>
@@ -248,17 +291,25 @@ const Settings = () => {
                 <Label htmlFor="transferMessage">Mensagem de Transferência</Label>
                 <Textarea
                   id="transferMessage"
-                  value={transferSettings.transferMessage}
-                  onChange={(e) => setTransferSettings({
-                    ...transferSettings, 
-                    transferMessage: e.target.value
-                  })}
+                  defaultValue={apiConfig?.transfer_message || 'Você será transferido para um atendente humano. Por favor, aguarde...'}
                   placeholder="Mensagem enviada ao cliente durante a transferência"
                   rows={3}
                 />
               </div>
               
-              <Button onClick={handleSaveTransferSettings}>
+              <Button onClick={() => {
+                const timeout = (document.getElementById('timeout') as HTMLInputElement)?.value;
+                const queueSize = (document.getElementById('queueSize') as HTMLInputElement)?.value;
+                const transferMessage = (document.getElementById('transferMessage') as HTMLTextAreaElement)?.value;
+                handleSaveApiConfig({
+                  evolution_api_url: apiConfig?.evolution_api_url,
+                  evolution_api_key: apiConfig?.evolution_api_key,
+                  n8n_webhook_url: apiConfig?.n8n_webhook_url,
+                  auto_transfer_timeout: parseInt(timeout),
+                  max_queue_size: parseInt(queueSize),
+                  transfer_message: transferMessage,
+                });
+              }}>
                 Salvar Configurações
               </Button>
             </CardContent>

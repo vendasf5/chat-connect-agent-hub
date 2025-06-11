@@ -9,6 +9,87 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agents: {
+        Row: {
+          api_url: string
+          created_at: string
+          description: string | null
+          evolution_instance_id: string | null
+          extension: string
+          id: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+          webhook_url: string | null
+        }
+        Insert: {
+          api_url: string
+          created_at?: string
+          description?: string | null
+          evolution_instance_id?: string | null
+          extension: string
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          webhook_url?: string | null
+        }
+        Update: {
+          api_url?: string
+          created_at?: string
+          description?: string | null
+          evolution_instance_id?: string | null
+          extension?: string
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      api_configurations: {
+        Row: {
+          auto_transfer_timeout: number
+          created_at: string
+          evolution_api_key: string | null
+          evolution_api_url: string
+          id: string
+          max_queue_size: number
+          n8n_webhook_url: string
+          transfer_message: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_transfer_timeout?: number
+          created_at?: string
+          evolution_api_key?: string | null
+          evolution_api_url?: string
+          id?: string
+          max_queue_size?: number
+          n8n_webhook_url?: string
+          transfer_message?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_transfer_timeout?: number
+          created_at?: string
+          evolution_api_key?: string | null
+          evolution_api_url?: string
+          id?: string
+          max_queue_size?: number
+          n8n_webhook_url?: string
+          transfer_message?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       Atende_Femar: {
         Row: {
           created_at: string
@@ -23,6 +104,174 @@ export type Database = {
           id?: number
         }
         Relationships: []
+      }
+      conversations: {
+        Row: {
+          agent_id: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          last_message: string | null
+          status: string
+          transfer_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          last_message?: string | null
+          status?: string
+          transfer_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          last_message?: string | null
+          status?: string
+          transfer_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      theme_settings: {
+        Row: {
+          background_color: string
+          created_at: string
+          foreground_color: string
+          id: string
+          primary_color: string
+          secondary_color: string
+          theme_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background_color?: string
+          created_at?: string
+          foreground_color?: string
+          id?: string
+          primary_color?: string
+          secondary_color?: string
+          theme_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background_color?: string
+          created_at?: string
+          foreground_color?: string
+          id?: string
+          primary_color?: string
+          secondary_color?: string
+          theme_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transfers: {
+        Row: {
+          completed_at: string | null
+          conversation_id: string
+          created_at: string
+          from_agent_id: string | null
+          id: string
+          reason: string | null
+          status: string
+          to_agent_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          conversation_id: string
+          created_at?: string
+          from_agent_id?: string | null
+          id?: string
+          reason?: string | null
+          status?: string
+          to_agent_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          conversation_id?: string
+          created_at?: string
+          from_agent_id?: string | null
+          id?: string
+          reason?: string | null
+          status?: string
+          to_agent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfers_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_from_agent_id_fkey"
+            columns: ["from_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_to_agent_id_fkey"
+            columns: ["to_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

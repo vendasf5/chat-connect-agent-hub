@@ -1,34 +1,54 @@
 
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContext';
-import { LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { LogOut, User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-export const Header = () => {
-  const { user, logout } = useAuth();
+const Header = () => {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: 'Logout realizado',
+        description: 'Você foi desconectado com sucesso.',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
-    <header className="border-b bg-card h-16 flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
-        <SidebarTrigger />
-        <h1 className="text-xl font-semibold text-foreground">Chat Connect Agent Hub</h1>
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {user?.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-medium text-foreground">{user?.name}</span>
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-16 items-center justify-between px-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">F</span>
+            </div>
+            <span className="font-semibold text-lg">Femar Atende</span>
+          </div>
         </div>
         
-        <Button variant="ghost" size="sm" onClick={logout}>
-          <LogOut className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center space-x-4">
+          {user && (
+            <>
+              <div className="flex items-center space-x-2 text-sm">
+                <User className="h-4 w-4" />
+                <span>{user.email}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
 };
+
+export default Header;
