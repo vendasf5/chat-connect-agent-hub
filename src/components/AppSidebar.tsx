@@ -29,7 +29,7 @@ export function AppSidebar() {
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
       ? 'bg-blue-600 text-white font-medium border border-blue-600' 
-      : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700 border border-gray-200';
+      : 'bg-black text-white hover:bg-gray-800 border border-black';
 
   return (
     <Sidebar collapsible="icon">

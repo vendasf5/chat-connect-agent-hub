@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ThemeColorPicker from '@/components/ThemeColorPicker';
+import NavigationSettings from '@/components/NavigationSettings';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -92,8 +92,9 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="theme" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="theme">Cores & Tema</TabsTrigger>
+          <TabsTrigger value="navigation">Navegação</TabsTrigger>
           <TabsTrigger value="api">APIs & Integrações</TabsTrigger>
           <TabsTrigger value="notifications">Notificações</TabsTrigger>
           <TabsTrigger value="transfers">Transferências</TabsTrigger>
@@ -101,6 +102,10 @@ const Settings = () => {
 
         <TabsContent value="theme" className="space-y-6">
           <ThemeColorPicker />
+        </TabsContent>
+
+        <TabsContent value="navigation" className="space-y-6">
+          <NavigationSettings />
         </TabsContent>
 
         <TabsContent value="api" className="space-y-6">
