@@ -165,7 +165,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
-          name: string
+          name?: string
           role?: string
           updated_at?: string
           user_id: string
