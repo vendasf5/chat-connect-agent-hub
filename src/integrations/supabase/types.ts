@@ -9,15 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_sessions: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          session_token: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          session_token: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          session_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_sessions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           api_url: string
           created_at: string
+          department: string | null
           description: string | null
+          email: string | null
           evolution_instance_id: string | null
           extension: string
           id: string
+          is_active: boolean | null
+          last_login: string | null
+          max_concurrent_chats: number | null
           name: string
+          password_hash: string | null
+          skills: string[] | null
           status: string
           updated_at: string
           user_id: string
@@ -26,11 +68,18 @@ export type Database = {
         Insert: {
           api_url: string
           created_at?: string
+          department?: string | null
           description?: string | null
+          email?: string | null
           evolution_instance_id?: string | null
           extension: string
           id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          max_concurrent_chats?: number | null
           name: string
+          password_hash?: string | null
+          skills?: string[] | null
           status?: string
           updated_at?: string
           user_id: string
@@ -39,11 +88,18 @@ export type Database = {
         Update: {
           api_url?: string
           created_at?: string
+          department?: string | null
           description?: string | null
+          email?: string | null
           evolution_instance_id?: string | null
           extension?: string
           id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          max_concurrent_chats?: number | null
           name?: string
+          password_hash?: string | null
+          skills?: string[] | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -108,34 +164,46 @@ export type Database = {
       conversations: {
         Row: {
           agent_id: string
+          assigned_at: string | null
           created_at: string
           customer_name: string
           customer_phone: string
           id: string
           last_message: string | null
+          notes: string | null
+          priority: string | null
           status: string
+          tags: string[] | null
           transfer_reason: string | null
           updated_at: string
         }
         Insert: {
           agent_id: string
+          assigned_at?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
           id?: string
           last_message?: string | null
+          notes?: string | null
+          priority?: string | null
           status?: string
+          tags?: string[] | null
           transfer_reason?: string | null
           updated_at?: string
         }
         Update: {
           agent_id?: string
+          assigned_at?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
           id?: string
           last_message?: string | null
+          notes?: string | null
+          priority?: string | null
           status?: string
+          tags?: string[] | null
           transfer_reason?: string | null
           updated_at?: string
         }
@@ -145,6 +213,47 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          message_type: string | null
+          metadata: Json | null
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          metadata?: Json | null
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          metadata?: Json | null
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
