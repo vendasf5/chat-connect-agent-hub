@@ -54,7 +54,27 @@ export const AgentAuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      setAgent(data.agents as Agent);
+      // Transform database format to Agent type
+      const agentData = data.agents as any;
+      const transformedAgent: Agent = {
+        id: agentData.id,
+        name: agentData.name,
+        extension: agentData.extension,
+        status: agentData.status,
+        description: agentData.description,
+        apiUrl: agentData.api_url,
+        webhookUrl: agentData.webhook_url,
+        createdAt: agentData.created_at,
+        email: agentData.email,
+        password_hash: agentData.password_hash,
+        last_login: agentData.last_login,
+        is_active: agentData.is_active,
+        department: agentData.department,
+        skills: agentData.skills,
+        max_concurrent_chats: agentData.max_concurrent_chats,
+      };
+
+      setAgent(transformedAgent);
     } catch (error) {
       console.error('Erro ao verificar sessão:', error);
     } finally {
@@ -76,10 +96,6 @@ export const AgentAuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: 'Credenciais inválidas' };
       }
 
-      // Aqui seria feita a verificação da senha hash
-      // Por simplicidade, vamos usar uma verificação básica
-      // Em produção, use bcrypt ou similar
-      
       // Criar sessão do agente
       const sessionToken = Math.random().toString(36).substring(2, 15) + 
                           Math.random().toString(36).substring(2, 15);
@@ -95,8 +111,27 @@ export const AgentAuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: 'Erro ao criar sessão' };
       }
 
+      // Transform database format to Agent type
+      const transformedAgent: Agent = {
+        id: agentData.id,
+        name: agentData.name,
+        extension: agentData.extension,
+        status: agentData.status,
+        description: agentData.description,
+        apiUrl: agentData.api_url,
+        webhookUrl: agentData.webhook_url,
+        createdAt: agentData.created_at,
+        email: agentData.email,
+        password_hash: agentData.password_hash,
+        last_login: agentData.last_login,
+        is_active: agentData.is_active,
+        department: agentData.department,
+        skills: agentData.skills,
+        max_concurrent_chats: agentData.max_concurrent_chats,
+      };
+
       localStorage.setItem('agent_session_token', sessionToken);
-      setAgent(agentData as Agent);
+      setAgent(transformedAgent);
 
       return {};
     } catch (error) {

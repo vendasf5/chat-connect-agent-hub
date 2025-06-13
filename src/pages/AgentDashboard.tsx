@@ -1,15 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useAgentAuth } from '@/contexts/AgentAuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Conversation, Message } from '@/types';
-import { LogOut, MessageSquare, Send, ArrowRight, User, Phone } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { MessageSquare, Send, LogOut, ArrowRight, Phone, Clock } from 'lucide-react';
+import { Conversation, Message } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 const AgentDashboard = () => {
   const { agent, signOut } = useAgentAuth();
@@ -18,19 +19,13 @@ const AgentDashboard = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (agent) {
       loadConversations();
     }
   }, [agent]);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      loadMessages(selectedConversation.id);
-    }
-  }, [selectedConversation]);
 
   const loadConversations = async () => {
     if (!agent) return;
@@ -39,14 +34,33 @@ const AgentDashboard = () => {
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
-        .eq('agentId', agent.id)
+        .eq('agent_id', agent.id)
         .in('status', ['active', 'pending'])
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      setConversations(data || []);
+
+      // Transform database format to Conversation type
+      const transformedConversations: Conversation[] = data.map((conv: any) => ({
+        id: conv.id,
+        agentId: conv.agent_id,
+        customerName: conv.customer_name,
+        customerPhone: conv.customer_phone,
+        status: conv.status,
+        lastMessage: conv.last_message,
+        timestamp: conv.updated_at,
+        assigned_at: conv.assigned_at,
+        priority: conv.priority,
+        tags: conv.tags,
+        notes: conv.notes,
+        transfer_reason: conv.transfer_reason,
+      }));
+
+      setConversations(transformedConversations);
     } catch (error) {
       console.error('Erro ao carregar conversas:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,7 +73,20 @@ const AgentDashboard = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+
+      // Transform database format to Message type
+      const transformedMessages: Message[] = data.map((msg: any) => ({
+        id: msg.id,
+        conversation_id: msg.conversation_id,
+        sender_type: msg.sender_type as 'agent' | 'customer' | 'system',
+        sender_id: msg.sender_id,
+        content: msg.content,
+        message_type: msg.message_type,
+        metadata: msg.metadata,
+        created_at: msg.created_at,
+      }));
+
+      setMessages(transformedMessages);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
     }
@@ -68,7 +95,6 @@ const AgentDashboard = () => {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !agent) return;
 
-    setIsLoading(true);
     try {
       const { error } = await supabase
         .from('messages')
@@ -76,14 +102,16 @@ const AgentDashboard = () => {
           conversation_id: selectedConversation.id,
           sender_type: 'agent',
           sender_id: agent.id,
-          content: newMessage.trim(),
+          content: newMessage,
+          message_type: 'text',
         });
 
       if (error) throw error;
 
+      // Reload messages
+      await loadMessages(selectedConversation.id);
       setNewMessage('');
-      loadMessages(selectedConversation.id);
-      
+
       toast({
         title: 'Mensagem enviada',
         description: 'Sua mensagem foi enviada com sucesso.',
@@ -92,49 +120,15 @@ const AgentDashboard = () => {
       console.error('Erro ao enviar mensagem:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível enviar a mensagem.',
+        description: 'Erro ao enviar mensagem.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const transferConversation = async () => {
-    if (!selectedConversation) return;
-
-    try {
-      const { error } = await supabase
-        .from('transfers')
-        .insert({
-          conversation_id: selectedConversation.id,
-          from_agent_id: agent?.id,
-          reason: 'Transferência solicitada pelo agente',
-          status: 'pending'
-        });
-
-      if (error) throw error;
-
-      await supabase
-        .from('conversations')
-        .update({ status: 'transferred' })
-        .eq('id', selectedConversation.id);
-
-      toast({
-        title: 'Conversa transferida',
-        description: 'A conversa foi transferida para um supervisor.',
-      });
-
-      loadConversations();
-      setSelectedConversation(null);
-    } catch (error) {
-      console.error('Erro ao transferir conversa:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível transferir a conversa.',
-        variant: 'destructive',
-      });
-    }
+  const handleConversationSelect = (conversation: Conversation) => {
+    setSelectedConversation(conversation);
+    loadMessages(conversation.id);
   };
 
   const handleSignOut = async () => {
@@ -145,40 +139,46 @@ const AgentDashboard = () => {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500';
-      case 'pending': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  if (!agent) return null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm">
+      <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">Femar Atende</h1>
-              <p className="text-sm text-muted-foreground">
-                {agent.name} - {agent.department}
-              </p>
+              <h1 className="text-2xl font-bold text-slate-900">Femar Atende</h1>
+              <p className="text-sm text-slate-600">Sistema de Atendimento</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              Online
-            </Badge>
+            <div className="flex items-center space-x-3 bg-slate-50 rounded-lg px-4 py-2">
+              <Avatar className="w-8 h-8">
+                <AvatarFallback className="bg-blue-600 text-white text-sm">
+                  {agent?.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium text-slate-900">{agent?.name}</p>
+                <p className="text-xs text-slate-600">{agent?.department}</p>
+              </div>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                Online
+              </Badge>
+            </div>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="h-4 w-4 mr-2" />
               Sair
             </Button>
           </div>
@@ -186,59 +186,60 @@ const AgentDashboard = () => {
       </header>
 
       <div className="flex h-[calc(100vh-80px)]">
-        {/* Lista de Conversas */}
-        <div className="w-80 bg-white border-r">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Conversas Ativas</h2>
-            <p className="text-sm text-muted-foreground">
-              {conversations.length} conversa(s)
-            </p>
+        {/* Conversations Sidebar */}
+        <div className="w-80 bg-white border-r border-slate-200 flex flex-col">
+          <div className="p-4 border-b border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">Conversas Ativas</h2>
+            <div className="flex items-center justify-between">
+              <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                {conversations.length} conversas
+              </Badge>
+            </div>
           </div>
           
-          <ScrollArea className="h-full">
-            <div className="space-y-2 p-2">
+          <ScrollArea className="flex-1">
+            <div className="p-2">
               {conversations.map((conversation) => (
                 <Card 
                   key={conversation.id}
-                  className={`cursor-pointer transition-colors ${
-                    selectedConversation?.id === conversation.id 
-                      ? 'bg-blue-50 border-blue-200' 
-                      : 'hover:bg-gray-50'
+                  className={`mb-2 cursor-pointer transition-all hover:bg-slate-50 ${
+                    selectedConversation?.id === conversation.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
                   }`}
-                  onClick={() => setSelectedConversation(conversation)}
+                  onClick={() => handleConversationSelect(conversation)}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-gray-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{conversation.customerName}</p>
-                          <p className="text-sm text-muted-foreground flex items-center">
-                            <Phone className="w-3 h-3 mr-1" />
-                            {conversation.customerPhone}
-                          </p>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="bg-slate-200 text-slate-600">
+                            {conversation.customerName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-slate-900 text-sm">{conversation.customerName}</p>
+                          <div className="flex items-center space-x-1 text-xs text-slate-500">
+                            <Phone className="w-3 h-3" />
+                            <span>{conversation.customerPhone}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end space-y-1">
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs ${getStatusColor(conversation.status)}`}
-                        >
-                          {conversation.status === 'active' ? 'Ativa' : 'Pendente'}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {conversation.timestamp}
-                        </span>
-                      </div>
+                      <Badge 
+                        variant={conversation.status === 'active' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {conversation.status}
+                      </Badge>
                     </div>
-                    
-                    {conversation.lastMessage && (
-                      <div className="mt-2 p-2 bg-gray-100 rounded text-sm">
-                        {conversation.lastMessage}
+                    <p className="text-sm text-slate-600 truncate mb-2">{conversation.lastMessage}</p>
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{new Date(conversation.timestamp).toLocaleTimeString()}</span>
                       </div>
-                    )}
+                      {conversation.priority === 'high' && (
+                        <Badge variant="destructive" className="text-xs">Alta</Badge>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -246,33 +247,32 @@ const AgentDashboard = () => {
           </ScrollArea>
         </div>
 
-        {/* Área de Chat */}
-        <div className="flex-1 flex flex-col">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col bg-slate-50">
           {selectedConversation ? (
             <>
-              {/* Header da Conversa */}
-              <div className="bg-white border-b p-4">
+              {/* Chat Header */}
+              <div className="bg-white border-b border-slate-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-gray-600" />
-                    </div>
+                    <Avatar className="w-10 h-10">
+                      <AvatarFallback className="bg-blue-100 text-blue-600">
+                        {selectedConversation.customerName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
-                      <h3 className="font-semibold">{selectedConversation.customerName}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedConversation.customerPhone}
-                      </p>
+                      <p className="font-semibold text-slate-900">{selectedConversation.customerName}</p>
+                      <p className="text-sm text-slate-600">{selectedConversation.customerPhone}</p>
                     </div>
                   </div>
-                  
-                  <Button variant="outline" onClick={transferConversation}>
-                    <ArrowRight className="w-4 h-4 mr-2" />
+                  <Button variant="outline" size="sm">
+                    <ArrowRight className="h-4 w-4 mr-2" />
                     Transferir
                   </Button>
                 </div>
               </div>
 
-              {/* Mensagens */}
+              {/* Messages */}
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
                   {messages.map((message) => (
@@ -285,12 +285,14 @@ const AgentDashboard = () => {
                       <div
                         className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                           message.sender_type === 'agent'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-200 text-gray-900'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-slate-900 border border-slate-200'
                         }`}
                       >
                         <p className="text-sm">{message.content}</p>
-                        <p className="text-xs mt-1 opacity-70">
+                        <p className={`text-xs mt-1 ${
+                          message.sender_type === 'agent' ? 'text-blue-100' : 'text-slate-500'
+                        }`}>
                           {new Date(message.created_at).toLocaleTimeString()}
                         </p>
                       </div>
@@ -299,26 +301,28 @@ const AgentDashboard = () => {
                 </div>
               </ScrollArea>
 
-              {/* Input de Mensagem */}
-              <div className="bg-white border-t p-4">
+              {/* Message Input */}
+              <div className="bg-white border-t border-slate-200 p-4">
                 <div className="flex space-x-2">
                   <Input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Digite sua mensagem..."
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    className="flex-1"
                   />
-                  <Button onClick={sendMessage} disabled={isLoading || !newMessage.trim()}>
-                    <Send className="w-4 h-4" />
+                  <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+                    <Send className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Selecione uma conversa para começar</p>
+                <MessageSquare className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <p className="text-xl font-medium text-slate-600 mb-2">Selecione uma conversa</p>
+                <p className="text-slate-500">Escolha uma conversa da lista para começar o atendimento</p>
               </div>
             </div>
           )}
