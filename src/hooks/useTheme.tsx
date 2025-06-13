@@ -23,7 +23,7 @@ const defaultTheme: ThemeSettings = {
   secondary_color: '210 40% 96.1%',
   background_color: '0 0% 100%',
   foreground_color: '222.2 84% 4.9%',
-  theme_name: 'default',
+  theme_name: 'Azul Corporativo',
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -65,7 +65,16 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading theme:', error);
       } else if (data) {
-        setThemeSettings(data);
+        const loadedTheme = {
+          id: data.id,
+          primary_color: data.primary_color,
+          secondary_color: data.secondary_color,
+          background_color: data.background_color,
+          foreground_color: data.foreground_color,
+          theme_name: data.theme_name,
+        };
+        setThemeSettings(loadedTheme);
+        applyThemeToDocument(loadedTheme);
       }
     } catch (error) {
       console.error('Error loading theme settings:', error);
@@ -79,13 +88,18 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
     const updatedSettings = { ...themeSettings, ...newSettings };
     setThemeSettings(updatedSettings);
+    applyThemeToDocument(updatedSettings);
 
     try {
       const { error } = await supabase
         .from('theme_settings')
         .upsert({
           user_id: user.id,
-          ...updatedSettings,
+          primary_color: updatedSettings.primary_color,
+          secondary_color: updatedSettings.secondary_color,
+          background_color: updatedSettings.background_color,
+          foreground_color: updatedSettings.foreground_color,
+          theme_name: updatedSettings.theme_name,
         });
 
       if (error) {
@@ -98,10 +112,37 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const applyThemeToDocument = (settings: ThemeSettings) => {
     const root = document.documentElement;
+    
+    // Aplicar as cores CSS customizadas
     root.style.setProperty('--primary', settings.primary_color);
     root.style.setProperty('--secondary', settings.secondary_color);
     root.style.setProperty('--background', settings.background_color);
     root.style.setProperty('--foreground', settings.foreground_color);
+    
+    // Aplicar cores derivadas para componentes
+    root.style.setProperty('--card', settings.background_color);
+    root.style.setProperty('--card-foreground', settings.foreground_color);
+    root.style.setProperty('--popover', settings.background_color);
+    root.style.setProperty('--popover-foreground', settings.foreground_color);
+    root.style.setProperty('--primary-foreground', settings.background_color);
+    root.style.setProperty('--secondary-foreground', settings.foreground_color);
+    
+    // Cores de estado baseadas no tema
+    if (settings.theme_name === 'Modo Escuro') {
+      root.style.setProperty('--muted', '217.2 32.6% 17.5%');
+      root.style.setProperty('--muted-foreground', '215 20.2% 65.1%');
+      root.style.setProperty('--accent', '217.2 32.6% 17.5%');
+      root.style.setProperty('--accent-foreground', settings.foreground_color);
+      root.style.setProperty('--border', '217.2 32.6% 17.5%');
+      root.style.setProperty('--input', '217.2 32.6% 17.5%');
+    } else {
+      root.style.setProperty('--muted', settings.secondary_color);
+      root.style.setProperty('--muted-foreground', '215.4 16.3% 46.9%');
+      root.style.setProperty('--accent', settings.secondary_color);
+      root.style.setProperty('--accent-foreground', settings.foreground_color);
+      root.style.setProperty('--border', '214.3 31.8% 91.4%');
+      root.style.setProperty('--input', '214.3 31.8% 91.4%');
+    }
   };
 
   const value = {
