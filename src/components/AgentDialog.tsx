@@ -12,7 +12,7 @@ interface AgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agent: Agent | null;
-  onSave: (agent: Omit<Agent, 'id' | 'createdAt'>) => void;
+  onSave: (agent: Omit<Agent, 'id' | 'created_at'>) => void;
 }
 
 export const AgentDialog = ({ open, onOpenChange, agent, onSave }: AgentDialogProps) => {
@@ -22,8 +22,8 @@ export const AgentDialog = ({ open, onOpenChange, agent, onSave }: AgentDialogPr
     email: '',
     department: 'Atendimento',
     description: '',
-    apiUrl: '',
-    webhookUrl: '',
+    api_url: '',
+    webhook_url: '',
     status: 'offline' as Agent['status'],
     skills: [] as string[],
     max_concurrent_chats: 5,
@@ -37,8 +37,8 @@ export const AgentDialog = ({ open, onOpenChange, agent, onSave }: AgentDialogPr
         email: agent.email || '',
         department: agent.department || 'Atendimento',
         description: agent.description,
-        apiUrl: agent.apiUrl,
-        webhookUrl: agent.webhookUrl,
+        api_url: agent.api_url,
+        webhook_url: agent.webhook_url || '',
         status: agent.status,
         skills: agent.skills || [],
         max_concurrent_chats: agent.max_concurrent_chats || 5,
@@ -50,8 +50,8 @@ export const AgentDialog = ({ open, onOpenChange, agent, onSave }: AgentDialogPr
         email: '',
         department: 'Atendimento',
         description: '',
-        apiUrl: '',
-        webhookUrl: '',
+        api_url: '',
+        webhook_url: '',
         status: 'offline',
         skills: [],
         max_concurrent_chats: 5,
@@ -145,22 +145,22 @@ export const AgentDialog = ({ open, onOpenChange, agent, onSave }: AgentDialogPr
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="apiUrl">URL da API *</Label>
+              <Label htmlFor="api_url">URL da API *</Label>
               <Input
-                id="apiUrl"
-                value={formData.apiUrl}
-                onChange={(e) => setFormData({ ...formData, apiUrl: e.target.value })}
+                id="api_url"
+                value={formData.api_url}
+                onChange={(e) => setFormData({ ...formData, api_url: e.target.value })}
                 placeholder="https://api.evolution.com/instance1"
                 required
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="webhookUrl">URL do Webhook</Label>
+              <Label htmlFor="webhook_url">URL do Webhook</Label>
               <Input
-                id="webhookUrl"
-                value={formData.webhookUrl}
-                onChange={(e) => setFormData({ ...formData, webhookUrl: e.target.value })}
+                id="webhook_url"
+                value={formData.webhook_url}
+                onChange={(e) => setFormData({ ...formData, webhook_url: e.target.value })}
                 placeholder="https://hooks.n8n.io/webhook/..."
               />
             </div>

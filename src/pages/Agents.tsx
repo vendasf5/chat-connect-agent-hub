@@ -16,9 +16,9 @@ const Agents = () => {
       extension: '1001',
       status: 'online',
       description: 'Especialista em vendas e qualificação de leads',
-      apiUrl: 'https://api.evolution.com/instance1',
-      webhookUrl: 'https://hooks.n8n.io/webhook/vendas',
-      createdAt: '2024-01-15'
+      api_url: 'https://api.evolution.com/instance1',
+      webhook_url: 'https://hooks.n8n.io/webhook/vendas',
+      created_at: '2024-01-15'
     },
     {
       id: '2',
@@ -26,9 +26,9 @@ const Agents = () => {
       extension: '1002',
       status: 'online',
       description: 'Atendimento técnico e resolução de problemas',
-      apiUrl: 'https://api.evolution.com/instance2',
-      webhookUrl: 'https://hooks.n8n.io/webhook/suporte',
-      createdAt: '2024-01-15'
+      api_url: 'https://api.evolution.com/instance2',
+      webhook_url: 'https://hooks.n8n.io/webhook/suporte',
+      created_at: '2024-01-15'
     },
     {
       id: '3',
@@ -36,9 +36,9 @@ const Agents = () => {
       extension: '1003',
       status: 'offline',
       description: 'Campanhas promocionais e nutrição de leads',
-      apiUrl: 'https://api.evolution.com/instance3',
-      webhookUrl: 'https://hooks.n8n.io/webhook/marketing',
-      createdAt: '2024-01-15'
+      api_url: 'https://api.evolution.com/instance3',
+      webhook_url: 'https://hooks.n8n.io/webhook/marketing',
+      created_at: '2024-01-15'
     }
   ]);
 
@@ -51,18 +51,18 @@ const Agents = () => {
     agent.extension.includes(searchTerm)
   );
 
-  const handleSaveAgent = (agentData: Omit<Agent, 'id' | 'createdAt'>) => {
+  const handleSaveAgent = (agentData: Omit<Agent, 'id' | 'created_at'>) => {
     if (editingAgent) {
       setAgents(agents.map(agent =>
         agent.id === editingAgent.id
-          ? { ...agentData, id: editingAgent.id, createdAt: editingAgent.createdAt }
+          ? { ...agentData, id: editingAgent.id, created_at: editingAgent.created_at }
           : agent
       ));
     } else {
       const newAgent: Agent = {
         ...agentData,
         id: Math.random().toString(36).substr(2, 9),
-        createdAt: new Date().toISOString().split('T')[0]
+        created_at: new Date().toISOString().split('T')[0]
       };
       setAgents([...agents, newAgent]);
     }
@@ -149,9 +149,9 @@ const Agents = () => {
               </div>
               
               <div className="text-xs text-muted-foreground space-y-1">
-                <p><strong>API:</strong> {agent.apiUrl}</p>
-                <p><strong>Webhook:</strong> {agent.webhookUrl}</p>
-                <p><strong>Criado:</strong> {agent.createdAt}</p>
+                <p><strong>API:</strong> {agent.api_url}</p>
+                <p><strong>Webhook:</strong> {agent.webhook_url}</p>
+                <p><strong>Criado:</strong> {agent.created_at}</p>
               </div>
             </CardContent>
           </Card>
