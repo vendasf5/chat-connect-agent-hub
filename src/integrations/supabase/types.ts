@@ -47,6 +47,7 @@ export type Database = {
       agents: {
         Row: {
           api_url: string
+          can_transfer: boolean | null
           created_at: string
           department: string | null
           description: string | null
@@ -67,6 +68,7 @@ export type Database = {
         }
         Insert: {
           api_url: string
+          can_transfer?: boolean | null
           created_at?: string
           department?: string | null
           description?: string | null
@@ -87,6 +89,7 @@ export type Database = {
         }
         Update: {
           api_url?: string
+          can_transfer?: boolean | null
           created_at?: string
           department?: string | null
           description?: string | null
@@ -161,6 +164,33 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           agent_id: string
@@ -216,6 +246,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      custom_integrations: {
+        Row: {
+          api_key: string | null
+          created_at: string
+          headers: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          type: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string
+          headers?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          type: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string
+          headers?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          type?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {

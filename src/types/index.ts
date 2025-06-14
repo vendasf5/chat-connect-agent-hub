@@ -15,6 +15,7 @@ export interface Agent {
   department?: string;
   skills?: string[];
   max_concurrent_chats?: number;
+  can_transfer?: boolean;
 }
 
 export interface Conversation {
@@ -63,4 +64,26 @@ export interface AgentSession {
   created_at: string;
   expires_at: string;
   is_active: boolean;
+}
+
+export interface CompanySettings {
+  id?: string;
+  user_id: string;
+  logo_url?: string;
+  company_name: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CustomIntegration {
+  id?: string;
+  user_id: string;
+  name: string;
+  type: 'api' | 'webhook';
+  url: string;
+  api_key?: string;
+  headers?: Record<string, string>;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }

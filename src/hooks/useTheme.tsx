@@ -74,7 +74,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
           theme_name: data.theme_name,
         };
         setThemeSettings(loadedTheme);
-        applyThemeToDocument(loadedTheme);
       }
     } catch (error) {
       console.error('Error loading theme settings:', error);
@@ -128,13 +127,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     root.style.setProperty('--secondary-foreground', settings.foreground_color);
     
     // Cores de estado baseadas no tema
-    if (settings.theme_name === 'Modo Escuro') {
+    if (settings.theme_name === 'Modo Escuro Profissional') {
       root.style.setProperty('--muted', '217.2 32.6% 17.5%');
       root.style.setProperty('--muted-foreground', '215 20.2% 65.1%');
       root.style.setProperty('--accent', '217.2 32.6% 17.5%');
       root.style.setProperty('--accent-foreground', settings.foreground_color);
       root.style.setProperty('--border', '217.2 32.6% 17.5%');
       root.style.setProperty('--input', '217.2 32.6% 17.5%');
+      root.style.setProperty('--ring', '212.7 26.8% 83.9%');
     } else {
       root.style.setProperty('--muted', settings.secondary_color);
       root.style.setProperty('--muted-foreground', '215.4 16.3% 46.9%');
@@ -142,7 +142,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       root.style.setProperty('--accent-foreground', settings.foreground_color);
       root.style.setProperty('--border', '214.3 31.8% 91.4%');
       root.style.setProperty('--input', '214.3 31.8% 91.4%');
+      root.style.setProperty('--ring', '222.2 84% 4.9%');
     }
+    
+    // Cores de estado sempre necessárias
+    root.style.setProperty('--destructive', '0 84.2% 60.2%');
+    root.style.setProperty('--destructive-foreground', '210 40% 98%');
+    root.style.setProperty('--radius', '0.5rem');
   };
 
   const value = {
