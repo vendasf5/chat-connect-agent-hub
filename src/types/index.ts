@@ -1,13 +1,12 @@
-
 export interface Agent {
   id: string;
   name: string;
   extension: string;
   status: 'online' | 'offline' | 'busy';
   description: string;
-  apiUrl: string;
-  webhookUrl: string;
-  createdAt: string;
+  api_url: string;
+  webhook_url: string;
+  created_at: string;
   email?: string;
   password_hash?: string;
   last_login?: string;
@@ -16,6 +15,9 @@ export interface Agent {
   skills?: string[];
   max_concurrent_chats?: number;
   can_transfer?: boolean;
+  user_id?: string;
+  updated_at?: string;
+  evolution_instance_id?: string;
 }
 
 export interface Conversation {
