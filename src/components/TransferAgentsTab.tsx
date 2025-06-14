@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +20,13 @@ import TransferAgentStats from './TransferAgentStats';
 import TransferAgentList from './TransferAgentList';
 import TransferInfoCard from './TransferInfoCard';
 
+const ALLOWED_STATUS = ['online', 'offline', 'busy'];
+
+const normalizeAgent = (raw: any): Agent => ({
+  ...raw,
+  status: ALLOWED_STATUS.includes(raw.status) ? raw.status : 'offline'
+});
+
 const TransferAgentsTab = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -35,7 +43,8 @@ const TransferAgentsTab = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      // Corrigir status para garantir conformidade com TypeScript
+      return (data || []).map(normalizeAgent);
     },
     enabled: !!user,
   });
@@ -88,3 +97,4 @@ const TransferAgentsTab = () => {
 };
 
 export default TransferAgentsTab;
+
