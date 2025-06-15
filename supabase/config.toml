@@ -1,1 +1,5 @@
+
 project_id = "guqkcvbdfinzaacvqbjc"
+
+[functions.register-agent]
+verify_jwt = false
