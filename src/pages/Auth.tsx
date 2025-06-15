@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -93,8 +94,17 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+      <Card className="w-full max-w-md relative">
+        {/* Botão Voltar */}
+        <Button
+          variant="link"
+          className="absolute left-2 top-2 flex items-center gap-2 text-blue-700 hover:text-blue-900 text-sm"
+          onClick={() => navigate('/')}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar ao início
+        </Button>
+        <CardHeader className="text-center pt-10">
           <CardTitle className="text-2xl font-bold">Femar Atende</CardTitle>
           <CardDescription>
             Faça login ou crie sua conta para acessar o sistema
@@ -180,3 +190,4 @@ const Auth = () => {
 };
 
 export default Auth;
+

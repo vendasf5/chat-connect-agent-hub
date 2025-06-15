@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentAuth } from '@/contexts/AgentAuthContext';
-import { MessageSquare, Mail, Lock, LogIn } from 'lucide-react';
+import { MessageSquare, Mail, Lock, LogIn, ArrowLeft } from 'lucide-react';
 
 const AgentLogin = () => {
   const [email, setEmail] = useState('');
@@ -52,8 +51,18 @@ const AgentLogin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl">
-          <CardHeader className="text-center pb-8">
+        <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl relative">
+          {/* Botão Voltar */}
+          <Button 
+            variant="link" 
+            onClick={() => navigate('/')}
+            className="absolute left-2 top-2 flex items-center gap-2 text-blue-700 hover:text-blue-900 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar ao início
+          </Button>
+          {/* Espaçamento para não cobrir o botão */}
+          <CardHeader className="text-center pt-10 pb-8">
             <div className="flex items-center justify-center mb-6">
               <div className="relative">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -138,16 +147,6 @@ const AgentLogin = () => {
             </div>
           </CardContent>
         </Card>
-        
-        <div className="text-center mt-6">
-          <Button 
-            variant="link" 
-            onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900"
-          >
-            ← Voltar ao início
-          </Button>
-        </div>
       </div>
     </div>
   );
